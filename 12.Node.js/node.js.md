@@ -550,6 +550,7 @@ response.setHeader('Content-Type', 'text/css');
 npm install mime        // mime的作用，可以根据文件名生成合理的类型
 npm install -g nodemon  //用于自动启动服务的工具
 npm install -g express  //基于Node.js快速开发的web框架
+npm install body-parser //接收POST请求体的中间件
 ```
 
 # 三.express框架
@@ -614,5 +615,29 @@ app.post('POST请求的地址', 处理函数);
 
 中间件处理静态资源：
 
-​	
+express框架自带了更好的方法，我们来看一下:
+
+```js
+// 通过如下代码就可以将 public 目录下的图片、CSS 文件、JavaScript 文件对外开放访问了
+app.use(express.static('public'));
+```
+
+## body-parser中间件处理post提交数据
+
+接收POST请求体的中间件(body-parser)
+
+安装:
+
+```bash
+npm install body-parser
+```
+
+
+
+上代码:
+
+```js
+// 如果请求头的 Content-Type为application/x-www-form-urlencoded，则将请求体赋值给req.body
+app.use(bodyParser.urlencoded({extended: false})); // extended: false 表示将接收的数据用querystring模块处理成对象
+```
 
