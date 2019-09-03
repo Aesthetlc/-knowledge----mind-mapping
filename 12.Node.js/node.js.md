@@ -613,7 +613,28 @@ app.post('POST请求的地址', 处理函数);
 * res就是响应相关的对象，它和后面用到的res对象也是一个对象
 * next：它是一个函数，调用它将会跳出当前的中间件函数，执行后续代码；如果不调用next，则会在当前中间件卡住
 
-中间件处理静态资源：
+## 中间件处理静态资源：
+
+自定义中间件的代码：
+
+```js
+// 下面定义中间件，处理所有的文件（html、css、js、png等）
+app.use((req, res, next) => {
+    // console.log(req.url);
+    // 判断是否有浏览器请求的文件，如果有，则读取并响应；如果没有则next
+    const fs = require('fs');
+    let filename = __dirname + '/public' + req.url;
+    fs.access(filename, (err) => {
+        if (err) {
+            next();
+        } else {
+            res.sendFile(filename);
+        }
+    });   
+});
+```
+
+
 
 express框架自带了更好的方法，我们来看一下:
 
@@ -632,9 +653,32 @@ app.use(express.static('public'));
 npm install body-parser
 ```
 
+自定义中间件的代码：
 
+```js
+//自我封装的方法
+app.use((req, res, next) => {
+    // 判断，看是否是POST方式的请求
+    if (req.method === 'POST') {
+        // 这里的代码和之前一样，还是接收数据
+        let str = '';
+        req.on('data', (chunk) => {
+            str += chunk;
+        });
+        req.on('end', () => {
+            // 将接收到的数据，赋值给req.body
+            // req.body属性本来不存在，是自定义的，你也可以用其他的名字
+            req.body = querystring.parse(str);
+            next();
+        });
+    } else {
+        // 不是POST方式的请求，继续向下走
+        next();
+    }
+})
+```
 
-上代码:
+body-parser 代码:
 
 ```js
 // 如果请求头的 Content-Type为application/x-www-form-urlencoded，则将请求体赋值给req.body
