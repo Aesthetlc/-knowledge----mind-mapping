@@ -1,25 +1,26 @@
 本文资源感谢   廖雪峰老师  https://www.liaoxuefeng.com/wiki/1022910821149312/1023025235359040
 
-## 基本模块
+# 一.基本模块
 
 ### global
 
-我们都知道，JavaScript有且仅有一个全局对象，在浏览器中，叫`window`对象。而在Node.js环境中，也有唯一的全局对象，但不叫`window`，而叫`global`，这个对象的属性和方法也和浏览器环境的`window`不同。进入Node.js交互环境，可以直接输入：
+我们都知道，JavaScript有且仅有一个全局对象，在浏览器中，叫`window`对象。而在Node.js环境中，也有唯一的全局对象，但不叫`window`，而叫`global`，这个对象的属性和方法也和浏览器环境的`window`不同。
 
-```js
-> global.console
-Console {
-  log: [Function: bound ],
-  info: [Function: bound ],
-  warn: [Function: bound ],
-  error: [Function: bound ],
-  dir: [Function: bound ],
-  time: [Function: bound ],
-  timeEnd: [Function: bound ],
-  trace: [Function: bound trace],
-  assert: [Function: bound ],
-  Console: [Function: Console] }
-```
+- console，我们在初体验时，使用了console，它可不是浏览器中的console对象，使用的是node中的console
+
+- process，和进程相关的对象
+
+- setInterval，同理，也是node中的，不是浏览器中的
+
+- **require()**，它是全局对象global中的一个方法，用于在js文件中引入另外的文件
+    - require() 方法可以在js文件中加载另外的js文件（模块）
+    - require() 方法可以在js文件中加载json文件
+    
+- __dirname，当前执行文件的绝对路径（在js文件中使用）
+
+- __filename，当前执行文件的绝对路径，包含文件名（在js文件中使用）
+
+> 上述：__dirname、\_\_filename、exports、module、require 这5个不能通过global调用，但是可以直接使用
 
 ### process
 
@@ -76,9 +77,11 @@ if (typeof(window) === 'undefined') {
 }
 ```
 
-## fs模块
+## 1.1 fs模块
 
-### 异步读文件
+### 读文件
+
+#### 异步读文件
 
 按照JavaScript的标准，异步读取一个文本文件的代码如下：
 
@@ -140,7 +143,7 @@ var buf = Buffer.from(text, 'utf-8');
 console.log(buf);
 ```
 
-### 同步读文件
+#### 同步读文件
 
 除了标准的异步读取模式外，`fs`也提供相应的同步读取函数。同步读取的函数和异步函数相比，多了一个`Sync`后缀，并且不接收回调函数，函数直接返回结果。
 
@@ -272,7 +275,37 @@ modified time: Fri Dec 11 2019 12:09:00 GMT+0800 (CST)
 
 服务器启动时如果需要读取配置文件，或者结束时需要写入到状态文件时，可以使用同步代码，因为这些代码只在启动和结束时执行一次，不影响服务器正常运行时的异步执行。
 
-## Stream模块
+##  1.2 path 模块
+
+* 使用方法
+
+  * 加载模块
+
+    ```js
+    // 使用核心模块之前，首先加载核心模块
+    let path = require('path');
+    // 或者
+    const path = require('path');
+    ```
+    
+   * 举例
+
+     ```js
+     const path = require('path');
+     
+     // extname -- 获取文件后缀
+     console.log(path.extname('index.html')); // .html
+     console.log(path.extname('index.coffee.md')); // .md
+     
+     // join -- 智能拼接路径
+     console.log(path.join('/a', 'b', 'c')); // \a\b\c
+     console.log(path.join('a', 'b', 'c')); // a\b\c
+     console.log(path.join('/a', '/b/../c')); // \a\c
+     console.log(path.join('/a', 'b', 'index.html')); // \a\b\index.html
+     console.log(path.join(__dirname, 'a', 'index.html')); // 得到一个绝对路径
+     ```
+
+## 1.3 Stream模块
 
 `stream`是Node.js提供的又一个仅在服务区端可用的模块，目的是支持“流”这种数据结构。
 
@@ -341,7 +374,7 @@ rs.pipe(ws);
 readable.pipe(writable, { end: false });
 ```
 
-##  url模块
+##  1.4 url模块
 
 遗留的API
 
@@ -371,7 +404,7 @@ readable.pipe(writable, { end: false });
    let age = myURL.searchParams.get('age')； // 22
    ```
 
-## querystring模块
+## 1.5 querystring模块
 
 * 处理查询字符串（请求参数）的模块
 
@@ -395,7 +428,7 @@ readable.pipe(writable, { end: false });
     // id=1&name=zs&age=20
     ```
   
-# 搭建一个服务器
+# 二.搭建一个服务器
 
 ## 流程：
 
@@ -433,4 +466,153 @@ server.listen(3000, () => {
   * req.url ----  获取请求的url
   * req.method --- 获取请求的方式，值为GET或POST
   * req.headers -- 所有的请求头
+## 处理post请求方式： 
+
+思路：创建连接方式与之前的思路是一样的，区别在于服务器接收数据的时候：
+
+```js
+// 有请求过来，就会触发这个事件。请求包含GET和POST两种请求
+server.on('request', (req, res) => {
+    // 当有数据提交给服务器之后。
+    // 服务器接收提交过来的数据；并且保存（json文件中，或者数据库中）
+    /**
+     * 1. 创建一个空字符串，用于保存提交过来的数据
+     * 2. 给req注册data事件，只要有数据提交过来，就会触发；用于接收提交过来的数据；数据比较大的话，是分块接收的
+     * 3. 给req注册end事件，当完全接收了提交过来的数据，就会触发
+     */
+    let str = ''; // 定义一个用于保存数据的空字符串
+    req.on('data', (chunk) => {
+        // chunk -- 块
+        str += chunk;
+    });
+    req.on('end', () => {
+        console.log(str); // id=1&name=zs&age=43
+    });
+});
+```
+
+## 处理静态资源：
+
+因为在html的页面中存在着多样的数据类型，我们在处理的时候需要对多种类型的数据进行设置`Content-Type`
+
+举例：
+
+````JS
+response.setHeader('Content-Type', 'text/css');
+````
+
+可能存在的类型：
+
+* .html：text/html
+* .css：text/css
+* .js：application/javascript
+* .jpg：image/jpg
+
+那么问题来了 ，这些类型我们不可能一个一个的设置，引入第三方模块：
+
+```js
+ const mime = require('mime'); // mime的作用，可以根据文件名生成合理的类型
+ let type = mime.getType(req.url);
+ res.setHeader('Content-Type', type);
+```
+
+## 第三方模块
+
+在"楼上"处理静态资源处，提到了第三方模块，那究竟什么是第三方模块呢，又能做什么呢？
+
+说白了：
+
+* 使用第三方模块，多数都是为了简化开发，将复杂的代码封装后，形成的模块
+
+安装方式：
+
+* npm（node package manager）node包管理器
+
+* 全局安装：
+
+  * ```bash
+    # 安装语法
+    npm install -g 模块名
+    # 新版Mac系统，如果提示权限不足，可以使用 sudo su npm install -g 模块名
+    ```
+
+* 局部（本地）安装
+
+  * ```bash
+    与全局安装语法一致，将-g取消即可，
+    # 安装语法
+    npm install 模块名
+    ```
+
+### 比较有用的第三方模块
+
+```bash
+npm install mime        // mime的作用，可以根据文件名生成合理的类型
+npm install -g nodemon  //用于自动启动服务的工具
+npm install -g express  //基于Node.js快速开发的web框架
+```
+
+# 三.express框架
+
+##  介绍
+
+
+
+什么是express:Express 是一个基于 Node.js 平台，快速、开放、极简的 **web 开发框架**。
+
+## 创建一个服务器的基本流程：
+
+文字描述：
+
+* 加载 express 模块
+* 创建 express 服务器
+* 开启服务器
+* 监听浏览器请求并进行处理
+
+代码描述：
+
+```JS
+// 使用express 搭建web服务器
+// 1) 加载 express 模块
+const express = require('express');
+
+// 2) 创建 express 服务器
+const app = express();
+
+// 3) 开启服务器
+app.listen(4000, () => console.log('express服务器开始工作了'));
+
+// 4) 监听浏览器请求并进行处理
+
+app.get('GET请求的地址', 处理函数);
+或
+app.post('POST请求的地址', 处理函数);
+```
+
+## express新增的API
+
+ 1) express框架封装了一些额外的API（例如:send），可以让我们更方便的构造Web服务器
+
+​	1.1 ）使用send方法响应数据的话，会自动设置content-type。但有时候会错误设置
+
+​	1.2 ）注意send不能直接响应数字，需要加引号，否则会将数字当做响应状态码处理
+
+ 2) 浏览器请求的每一个url地址都会由一个独立方法接收并处理，没有了 if ... else if ... else 这样的分支，程序结构
+     更加清晰
+
+3）sendFile(文件路径); -- 功能是读取文件，并将读取到的结果响应给浏览器。它的参数必须是绝对路径。
+
+## 中间件
+
+介绍与使用:
+
+* 中间件就是一个函数，中间件函数要当做 `app.use();` 的参数，这样来使用
+* 中间件函数中有三个基本参数， req、res、next
+* req就是请求相关的对象，它和后面用到的req对象是一个对象
+* res就是响应相关的对象，它和后面用到的res对象也是一个对象
+* next：它是一个函数，调用它将会跳出当前的中间件函数，执行后续代码；如果不调用next，则会在当前中间件卡住
+
+中间件处理静态资源：
+
+​	
 
