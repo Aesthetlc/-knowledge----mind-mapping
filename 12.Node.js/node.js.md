@@ -534,6 +534,7 @@ response.setHeader('Content-Type', 'text/css');
     # 安装语法
     npm install -g 模块名
     # 新版Mac系统，如果提示权限不足，可以使用 sudo su npm install -g 模块名
+    注意：全局安装不能使用`require()`
     ```
 
 * 局部（本地）安装
@@ -683,5 +684,191 @@ body-parser 代码:
 ```js
 // 如果请求头的 Content-Type为application/x-www-form-urlencoded，则将请求体赋值给req.body
 app.use(bodyParser.urlencoded({extended: false})); // extended: false 表示将接收的数据用querystring模块处理成对象
+```
+
+# 四.mysql模块
+
+## 简介
+
+* mysql是一个第三方的模块，主要用来操作mysql数据库，对数据库进行增删改查等操作
+
+安装：
+
+```BASH
+npm i mysql
+```
+
+curd:
+
+```bash
+curd: 就代表数据库的增删改查
+c: create 就是添加 （增）
+u: update 就是修改 （改）
+r: read 就是查询 （查）
+d: delete 就是删除 （删）
+```
+
+##  流程 （创建步骤）
+
+> 1) 加载 MySQL 模块
+>
+> 2) 创建 MySQL 连接对象
+>
+> 3) 连接 MySQL 服务器
+>
+> 4) 执行SQL语句           
+>
+> 5) 关闭链接           
+
+代码实现：
+
+```JS
+// 1. 加载mysql模块
+const mysql = require('mysql');
+// 2. 创建连接对象（设置连接参数）
+const conn = mysql.createConnection({
+    // 属性：值
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    password: '',
+    database: '*****' //填写你要连接的数据库
+    multipleStatements: true // 一次性执行多条sql  （可选参数）
+});
+// 3. 连接到MySQL服务器
+conn.connect();
+// 4. 完成查询（增删改查）
+//**********************************查询****************************
+//占位符查询（第二个参数处可以传入数组，当为多个参数的时候）
+let sql = 'select * from 数据库 where id<?';
+conn.query(sql,3,(err,result)=>{
+    if(err) throw err;
+    console.log(result)
+}); 
+//**********************************添加****************************
+//添加操作
+let sql = 'insert into 数据库 set ?';
+let values = {
+    name:"泰达米尔",
+    nickname:"蛮王",
+    sex:"男",
+    age:32,
+};
+//**********************************修改****************************
+//修改
+let sql = 'update 数据库 set ? where id = ?';
+let values = {
+    skill: '时光倒流',
+    sex: '男'
+}
+conn.query(sql, [values, 36], (err, result) => {
+    if (err) {
+        console.log('修改失败');
+    } else {
+        console.log('修改成功');
+    }
+});
+//**********************************删除****************************
+// 4. 完成删除
+let sql = 'delete from 数据库 where 字段 = ?';
+conn.query(sql, 36, (err, result) => {
+    if (err) {
+        console.log('删除失败');
+    } else {
+        console.log('删除成功');
+    }
+});
+//conn.query(sql语句,[sql语句中占位符的值],获取查询结果的回调函数);
+conn.query(sql, values,(err, result) => {
+    if (err) throw err;
+    console.log(result)
+});
+// 5. 关闭连接，释放资源
+conn.end();
+```
+
+# 五.模块化
+
+## 5.1 Node中的模块化
+
+* Node属于CommonJS标准
+
+模块化的好处：
+
+* 使用模块化可以很好的解决变量、函数名冲突问题，也能灵活的解决文件依赖问题
+* 没有模块化，不允许一个js文件引入另外的JS，有了模块化，就允许一个js文件引入其他的js文件
+
+## 5.2 作用域
+
+局部作用域（模块的作用域）：
+
+- 一个js文件就是一个模块
+- 在一个js文件中定义的属性（变量、常量）和方法默认都只能在当前js文件中使用
+
+全局作用域：
+
+- 在js文件中声明的属性和方法如果都挂载到global对象下；当其他js文件导入该模块后，就能使用该模块下的属性和方法了。
+
+  bb.js 中定义一些变量，并且把变量当做global的属性：
+
+  ```js
+  // 定义一些变量
+  let abc = 'hello';
+  let fn = (x, y) => {
+      console.log(x + y);
+  }
+  // 把abc和fn当做global的属性
+  global.abc = abc;
+  global.fn = fn;
+  ```
+
+  aa.js 中，通过require加载另外的js文件，就可以使用bb中定义的变量了：
+
+  ```js
+  // 加载 b.js
+  require('./bb.js');
+  console.log(abc); // hello
+  fn(3, 4); // 7
+  ```
+
+  **这个方案可以实现模块化，但是可能会造成全局环境污染**。
+
+## 5.3 module.exports 导出属性和方法
+
+- 将变量、对象、函数等挂载到global对象上并不推荐，因为容易造成变量污染。
+- 推荐使用 module.exports 导出模块中定义好的变量、对象、方法
+- 使用require加载（导入）模块后，就能使用模块中定义好的变量、对象、方法了
+
+A.js 中定义一些变量，然后使用 `module.exports导出`：
+
+```js
+// 定义一些变量
+let abc = 'hello';
+let fn = (x, y) => {
+    console.log(x + y);
+};
+// Node提供一套方案：
+// 使用 module.exports 来导出模块（导出的只能是对象或函数）
+module.exports = {
+    abc: abc,
+    fn: fn
+};
+--------------------------------
+当函数的键名与变量名一致的时候可以简写成：
+module.exports = {
+    abc,fn
+};
+```
+
+B.js 加载 A.js ，然后就得到了 A中导出的对象：
+
+- **导入自己定义的js文件，必须加  `./`**
+
+```js
+// 导入模块(基本上和之前加载模块一样)
+const bbb = require('./bbb.js');
+// console.log(bbb); // { abc: 'hello', fn: [Function: fn] }
+console.log(bbb.abc); // hello
+bbb.fn(7, 8); // 15
 ```
 
