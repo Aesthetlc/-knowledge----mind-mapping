@@ -915,6 +915,7 @@ module.exports = db;
 
 ```js
 //加载封装好的db.js
+//切记这里一定要带 ./ 这个位置之前已经说明过，切记切记
 const db = require('./01.db');
 
 db('select id,name from heroes', null, (err, result) => {
