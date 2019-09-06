@@ -924,3 +924,124 @@ db('select id,name from heroes', null, (err, result) => {
 });
 ```
 
+#  六.multer模块
+
+## 6.1 简介
+
+* multer 是基于express框架的一个实现文件上传功能的中间件。
+* 查看：<https://github.com/expressjs/multer>
+
+##  6.2配置
+
+ 配置方式1：
+
+```js
+// 加载模块
+const multer  = require('multer');
+
+// 配置
+/*
+1. 调用multer函数，需要给他传递一个对象，来对上传的文件进行配置
+2. dest：表示目标，在这里表示文件上传的保存位置。下面设置上传的文件保存在当前文件夹的myup子文件夹中
+3. 设置dest为一个目录后，如果该目录不存在，还可以自行创建该文件夹。
+4. 得到的myupload是一个对象，该对象的几个方法都可以当做中间件，可以在添加或注册的时候使用
+*/
+const myupload = multer({
+  dest: __dirname + '/myup'
+});
+```
+
+配置方式2：
+
+```js
+// 加载模块
+const multer  = require('multer');
+
+// 配置
+/*
+1. 仍然是调用multer函数，给它传递一个对象进行配置
+2. storage：文件的存储引擎，multer内置了磁盘存储(DiskStorage)和内存存储(MemoryStorage)
+3. 下面使用的是diskStorage磁盘存储引擎，及它的配置
+4. destination表示上传文件的存储路径，可以是一个函数，也可以是一个字符串
+   如果用函数设置此项，函数的三个形参，分别表示请求的req对象、表示上传文件的file对象和一个回调函数
+   无论使用函数还是字符串设置destination，都不会自动创建文件夹
+5. filename 用于确定文件夹中的文件名的确定。 如果没有设置 filename，每个文件将设置为一个随机文件    名，并且是没有扩展名的。
+6. 下面配置中，回调函数中的file形参表示上传的文件对象，对象的属性见后面的表
+*/
+const myupload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      // cb是回调函数，用它设置上传路径，null的位置可以写成err，用于获取错误，使用null表示不获取错误
+      cb(null, __dirname + '/abcd')
+    },
+    // destination: __dirname + '/cdef',
+    filename: function (req, file, cb) {
+      cb(null, file.fieldname + '-' + Date.now())
+    }
+  })
+});
+```
+
+上面配置 destination和filename函数的file参数表示上传的文件对象，该对象具有以下属性：
+
+| Key            | Description                     |
+| -------------- | ------------------------------- |
+| `fieldname`    | Field name 由表单指定           |
+| `originalname` | 用户计算机上的文件的名称        |
+| `encoding`     | 文件编码                        |
+| `mimetype`     | 文件的 MIME 类型                |
+| `size`         | 文件大小（字节单位）            |
+| `destination`  | 保存路径                        |
+| `filename`     | 保存在 `destination` 中的文件名 |
+| `path`         | 已上传文件的完整路径            |
+
+## 6.3 使用
+
+在有文件上传的请求处理中，使用中间件即可
+
+```JS
+/////////////////////////////// 1. 单文件上传 ////////////////////////
+// 单文件上传使用方式（形如：<input type="file" name="pic" />）
+/*
+在下面的 /abc 接口中，使用myupload.single() 方法作为该接口的中间件
+myupload.single() 的参数 pic 为 表单项的name值
+因为是单文件上传，所以在函数内部可以通过req.file 来获取上传的文件对象
+*/
+app.post('/abc', myupload.single('pic'), (req, res) => {
+  console.log(req.file); // 上传的文件对象
+  console.log(req.body); // 表单的文本信息
+  res.send('文件上传成功');
+});
+
+/////////////////////////////// 2. 多文件上传 ////////////////////////
+// 一个可以多文件上传的文件域（形如：<input type="file" multiple name="pic" />）
+/*
+在下面的 /abc 接口中，使用myupload.array() 方法作为该接口的中间件
+myupload.array() 的参数 pic 为 表单项的name值， 2 表示允许上传的文件个数不能超过2个
+因为是多文件上传，所以在函数内部可以通过req.files 来获取上传的文件对象
+*/
+app.post('/abc', myupload.array('pic', 2), (req, res) => {
+  console.log(req.files);
+  console.log(req.body);
+  res.send('文件上传成功');
+});
+
+
+/////////////////////////////// 3. 多个文件域 ////////////////////////
+// 有多个文件域 (形如：<input type="file" multiple name="pic1" /><input type="file" multiple name="pic2" />)
+/*
+在下面的 /abc 接口中，使用myupload.fields() 方法作为该接口的中间件
+myupload.fields() 的参数 为一个数组，数组中的每个单元对应着一个文件域，name为文件域name属性值，maxCount表示该文件域可以选择的文件个数最大值
+因为是多文件上传，所以在函数内部可以通过req.files 来获取上传的文件对象
+*/
+let up = upload.fields([
+    { name: 'pic1', maxCount: 1 }, 
+    { name: 'pic2', maxCount: 8 }
+]);
+app.post('/abc', up, (req, res) => {
+  console.log(req.files);
+  console.log(req.body);
+  res.send('文件上传成功');
+});
+```
+
