@@ -201,3 +201,184 @@
 > 结果： 以上代码执行: 会将数组中前两个元素忽略掉
 >
 > 说明：v-for 的优先级大于v-if ,所有v-if才能使用v-for的变量
+
+## 1.11 v-bind
+
+* 作用：
+  
+  * 绑定标签上的任何属性
+  
+* 语法：
+  
+  * `<p v-bind:属性="数据对象中的属性名"></p>`
+ ### 1.11.1 v-bind-绑定class -`对象`语法
+
+* 语法：
+  * 绑定class对象语法    :class="{ class名称": 布尔值 }"
+  * `<p :class="{left:showClass}">内容</p>`
+
+### 1.11.2 v-bind-绑定class -`数组`语法
+
+- 语法：
+  - 绑定class数组语法 :class="[class变量1,class变量2..]"
+  - `<p :class="[activeClass,selectClass]" class="default">内容</p>`
+
+
+### 1.11.3 v-bind-绑定`style-对象`语法
+
+- 语法：
+  - :style="{css属性名: 变量}"
+  - `<p :style="{fontSize:fontsize}"></p>`
+
+### 1.11.4 v-bind-绑定`style-数组`语法
+
+- 语法：
+
+  - :style="[对象1,对象2...]"
+- 注意：对象可以是多个属性的 集合  同样里面的css属性需要遵从小驼峰命名的规则
+
+  
+
+## 1.12 v-model
+
+* 作用
+
+  * **`表单元素`**的绑定
+
+* 特点
+
+  * 数据发生变化可以更新到界面 => 响应式数据
+  * 通过界面可以更改数据  => 表单数据变化 => viewmodel => 数据
+  * ` v-model` 会忽略所有表单元素的 `value`、`checked`、`selected` 特性的初始值而总是将 Vue 实例的数据作为数据来源。应该在 `data`选项中声明初始值。
+
+###  1.12.1 语法糖
+
+* 通过v-on指令和 v-bind指令 组合实现v-model效果
+
+  ```JS
+  <body>
+      <div id="app">
+          <p>{{ name }}</p>
+          <input @input="changeMsg" type="text" :value="name">
+      </div>
+      <script src="../vue.js"></script>
+      <script>
+          var vm = new Vue({
+              el: '#app',
+              data: {
+                  name: "",
+              },
+              methods: {
+                  changeMsg() {
+                      this.name = event.target.value;
+                  }
+              }
+          });
+      </script>
+  </body>
+  ```
+
+###  1.12.2-v-model-绑定其他表单元素
+
+表单元素:  input  textarea checkbox radio  select 
+
+注意：
+
+*  checkbox在input标签中需要给定value值
+* 所有表单元素一旦绑定了 v-model  就会忽略掉 原有的value值 checked值 selected值  需要从数据对象中取默认值
+
+##  1.12.3 v-cloak
+
+* 场景
+  
+  * 解决页面初次渲染时 页面模板闪屏现象
+  
+* 解决
+  * 1.编写元素标签
+  
+  * 2.写入v-cloak指令
+  
+    * ```CSS
+      [v-cloak]{
+          display:none
+      }
+      ```
+  
+  * 3.将v-cloak指令 属性加上style
+  
+* 注意
+
+  > 问：既然是加入属性选择器标签，那么为什么必须写v-cloak，不能使用其他名称么？
+  >
+  > 答:  不能写其他的名称，因为vue只认它
+
+## 1.12.4 v-once
+
+* 作用：
+
+  * 使得所在元素只渲染一次  
+
+## 1.12.5 过滤器
+
+> - 场景: data中的数据格式(日期格式/货币格式/大小写等)需要数据时
+> - 使用位置:{{}}和v-bind="表达式 | 过滤器名称"
+> - 具体用法:{{msg | 过滤器名字}}
+> - 分类:**`本地(局部)`**和全局  全局 **`所有实例`**均可使用  Vue  局部过滤器 只有**`当前实例`**才可以使用
+> - 本地: 通过el/data/methods**`选项`**filters
+> - 局部和全局的区别 => 注册位置不同,应用范围不同
+> - 全局: 在new Vue上面 Vue.filter()  => 所有实例都可以使用
+> - 局部: 在Vue实例上 的选项上 filters => 所有过滤器集合 =>当前实例使用
+
+* 全局过滤器
+
+  * 在创建 Vue 实例**`之前`**定义全局过滤器Vue.filter()
+
+  * Vue.filter('该过滤器的名字',(要过滤的数据)=>{return 对数据的处理结果});
+
+  * 在视图中通过{{数据 | 过滤器的名字}}或者v-bind使用过滤器
+
+    ```JS
+    Vue.filter("toUpper", function(value) {
+    	return value.charAt(0).toUpperCase() + value.substr(1);
+    });// 过滤器核心代码
+    ```
+
+* 局部过滤器
+
+  * 在vm对象的选项中配置过滤器filters:{}
+
+  * (key)过滤器的名字: (value)(要过滤的数据)=>{return 过滤的结果}
+
+  * 在视图中使用过滤器:  {{被过滤的数据 | 过滤器的名字}}
+
+    ```js
+    filters: {
+        toUpper(value) {
+          return value.charAt(0).toUpperCase() + value.substr(1);
+        }
+    }
+    ```
+
+* `注意： `
+
+  * `局部过滤器只能用在当前Vue实例视图上`
+  * `过滤器可以传递参数,第一个参数永远是前面传递过来的过滤值`
+  * `过滤器也可以多个串行起来并排使用`
+  
+    
+
+## 1.12.6 ref 操作 DOM
+
+* 作用: 通过ref特性可以获取元素的dom对象
+* 使用:  给元素定义 ref属性, 然后通过$refs.名称 来获取dom对象
+* $refs是Vue实例的属性 
+* $data/$event => $开头的属性和方法都是Vue实例的方法和属性
+
+```JS
+<input type="text" ref="myInput" /> // 定义ref
+    
+focus() {
+	this.$refs.myInput.focus();
+}  // 获取dom对象 聚焦
+```
+
