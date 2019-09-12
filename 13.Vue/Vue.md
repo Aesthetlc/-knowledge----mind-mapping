@@ -287,7 +287,7 @@
 *  checkbox在input标签中需要给定value值
 * 所有表单元素一旦绑定了 v-model  就会忽略掉 原有的value值 checked值 selected值  需要从数据对象中取默认值
 
-##  1.12.3 v-cloak
+##  1.13 v-cloak
 
 * 场景
   
@@ -312,13 +312,13 @@
   >
   > 答:  不能写其他的名称，因为vue只认它
 
-## 1.12.4 v-once
+## 1.14 v-once
 
 * 作用：
 
   * 使得所在元素只渲染一次  
 
-## 1.12.5 过滤器
+## 1.15 过滤器
 
 > - 场景: data中的数据格式(日期格式/货币格式/大小写等)需要数据时
 > - 使用位置:{{}}和v-bind="表达式 | 过滤器名称"
@@ -367,7 +367,7 @@
   
     
 
-## 1.12.6 ref 操作 DOM
+## 1.16 ref 操作 DOM
 
 * 作用: 通过ref特性可以获取元素的dom对象
 * 使用:  给元素定义 ref属性, 然后通过$refs.名称 来获取dom对象
@@ -380,5 +380,250 @@
 focus() {
 	this.$refs.myInput.focus();
 }  // 获取dom对象 聚焦
+```
+
+## 1.17 自定义指令
+
+* 全局自定义指令
+
+  * 在创建 Vue 实例之前定义全局自定义指令  Vue.directive()
+
+  * 表达式对象 => value  => 表达式计算结果的值
+
+  * 在视图中通过"v-自定义指令名"去使用指令
+
+  * 指令名称要全小写
+
+    > // 定义指令
+    > // 自定义指令是不需要加v-前缀的
+    > // 第二个参数为一个`对象`  对象中要实现 inserted的方法
+    > // inserted中的参数为当前指令所在元素的dom对象
+    > Vue.directive("focus", {
+    >         inserted(dom,expression) {
+    >           dom.focus();
+    >         }
+    >  });
+
+* 局部自定义指令
+
+  * 需要注册在`当前实例`上
+
+  * `directives`这里注意是带s的与全部自定义指定名称不同
+
+    > `directives`: {
+    >
+    > ​                htmlcopy: {
+    >
+    > ​                    inserted(dom, expression) {
+    >
+    > ​                        dom.innerHTML = expression.value;
+    >
+    > ​                    }
+    >
+    > ​                }
+    >
+    > ​            }
+
+## 1.18 计算属性
+
+- 场景:当(插值表达式/v-bind表达式)过于复杂的情况下 可以采用计算属性 对于任何**`复杂逻辑`**都可以采用计算属性,**`简单逻辑也可以采用计算属性`**
+
+- 使用: 在Vue实例选项中 定义 computed:{ (key)计算属性名: **`带返回值`**的函数 }
+
+- 说明: 计算属性的值 依赖 数据对象中的值  数据对象发生改变 => 计算属性发生改变=> 视图改变
+
+  ### 1.12.8.1 计算属性与方法的区别
+
+  > - methods 每次都会执行  
+  > - 计算属性 每计算一次 都会讲结果`缓存`,如果 data中的数据没变化,则直接从缓存中取数据
+  > - 如果 data中变化了 , 则会执行 新的计算方法 => 缓存
+  > - 计算属性 会每次比较**`data更新`**前后的值 如果前后一致 则不会引起视图变化
+  > - methods每次都会执行 `性能`较计算属性`较差`
+  > - 计算属性是有`缓存机制`的,更智能化 ,更有`效率`
+  > - 计算属性直接名称，方法除了名称之外还要有（）括号
+
+  ### 1.12.8.2 计算属性与方法的基本使用
+
+  > - 由于计算属性中 要return 值 => 立刻返回 => 同步/异步 => 计算属性方法 => **`必须写同步代码`**
+  > - **`ajax/setTimeout`**  不能写在计算属性中
+
+  >  computed: {
+  >
+  > ​                //通过计算属性实现**`字符串的翻转`**
+  >
+  > ​                fanzhuan() {
+  >
+  > ​                    return this.content.split("").reverse().join("");
+  >
+  > ​                },
+  >
+  > ​	}
+
+##  1.19 Vue中实现发送网络请求
+
+1. vue-resource: Vue.js的插件，已经不维护，不推荐使用
+2. [axios](https://www.kancloud.cn/yunye/axios/234845) :**不是vue的插件**，可以在任何地方使用，
+
+```js
+//-----------------------------*************-------------------
+// promise 是为了解决回调
+$.ajax({
+ url:'',
+ data:{},
+ success:function(data){
+     // data为后端响应回来的数据
+     $.ajax({
+         url:''
+         data:data,
+         success:function(data1){
+          $.ajax({
+              url:'',
+              data:data,
+              success:function(data2){
+                  
+              }
+          })  
+       }
+     })
+ }
+})
+// -----------------------------*************-------------------
+new Promise(function(resolve,reject){ 
+ if(flag === 1) {
+       resolve("success")  // 正确执行  返回一个字符串 success
+ }else {
+     reject(new Error("fail")) // reject 抛出错误 throw一个错误
+ } 
+}).then(result => {
+  return  axios({url,data:result }) // 第一个请求 生成result1
+}).then(result1 => {
+  return axios(url,data:result) // 第二个请求生成result2
+}).then(result2 => {
+  return axios({url,data:result}) //第三个请求result3
+}).then(result3 => {
+  return axios({})
+}).catch(err=>{
+  
+})
+// 链式调用
+// 如果reject  相当于执行失败 =>  执行失败=>不会进入到then => 会进入到promise的catch
+// -----------------------------*************-------------------
+//axios 返回的是一个promise对象 
+axios ===  new Promise(function(reslove,reject){
+       
+})
+axios().then(拿到返回数据(接口返回数据)).catch(err=> )
+```
+
+## 1.20 RESTFUL的接口规则
+
+> - RESTful是一套**`接口设计规范`**
+> - 用**`不同的请求类型`**发送**`同样一个请求标识`** 所对应的处理是`不同的`
+> - 同样的请求标识 => 相同的请求地址**`url`**
+> - 通过Http请求的不同类型(POST/DELETE/PUT/GET)来判断是什么业务操作(CRUD ) 
+> - CRUD => 增删改查 => C =>Create(增)  R => Read(查)    U => UPDATE(改)  D =>DELETE(删)
+> - json-server应用了RESTful规范
+
+**HTTP方法规则举例**
+
+| **HTTP方法** | **数据处理** | **说明**                                           |
+| ------------ | ------------ | -------------------------------------------------- |
+| POST         | Create       | 新增一个没有id的资源                               |
+| GET          | Read         | 取得一个资源                                       |
+| PUT          | Update       | 更新一个资源。或新增一个含 id 资源(如果 id 不存在) |
+| DELETE       | Delete       | 删除一个资源                                       |
+
+1. 查询数据  GET  /brands 获取db.json下brands对应的所有数据 **`列表`**
+2. GET /brands/1 查询id=1数据 **`单条`**
+3. 删除数据 DELETE   /brands/1 删除id=1数据
+4. 修改数据 PUT  /brands/1 请求体对象 {name:'李四' }
+5. 上传/添加 POST /brands 请求体  {name:'李四'}
+
+​     6.   查询 GET /brands?title_like=关键字  -> 模糊搜索
+
+## 1.21 axios
+
+* Axios 是一个基于 promise 的 HTTP 库，简单的讲就是可以发送get、post请求。
+  * 特点：
+    * 1、可以在浏览器中发送 XMLHttpRequests
+    * 2、可以在 node.js 发送 http 请求
+    * 3、支持 Promise API
+    * 4、拦截请求和响应
+    * 5、转换请求数据和响应数据
+    * 6、能够取消请求
+    * 7、自动转换 JSON 数据
+    * 8、客户端支持保护安全免受 XSRF 攻击
+* 除去post请求 ,所有接口的正确请求返回码都是**`200`** 但是post的状态码是**`201`**
+
+```JS
+//get请求：
+axios.get('http://localhost:3000/brands')
+.then(res => {
+console.log(res.data);
+})
+.catch(err => {
+console.dir(err)
+});
+```
+
+```JS
+//delete请求：
+axios.delete('http://localhost:3000/brands/109')
+.then(res => {
+console.log(res.data);
+})
+.catch(err => {
+console.dir(err)
+});
+```
+
+```js
+//post请求
+axios.post('http://localhost:3000/brands', {name: '小米', date: new Date()})
+.then(res => {
+console.log(res);
+})
+.catch(err => {
+console.dir(err)
+});
+```
+
+## 1.22 watch
+
+* 当需要根据**`数据变化`** 进行相应业务操作,且该操作是**`异步操作`**时,**`计算属性不能再使用`**,可以使用监听watch特性
+
+- watch=> 是监听data数据 中数据项的变化对象 => data中数据变化  => watch 监控函数执行 =>监控函数 
+- 监控函数 =>  newValue.oldValue
+- watch选项不需要返回值 不需要return  只需要在函数体中执行对应的逻辑即可\
+- watch:  {  data属性名(监视谁写谁的名字): function(newValue(新值),oldValue(旧值)){} } 
+
+##  1.23 组件
+
+* 组件特点: 
+  * 组件是一个**`特殊的 Vue实例`**
+  * vue实例有**`el`**选项  组件实例没有el 但是**`templete`**页面结构
+  * template 代表其页面结构 (**`有且只要一个根元素`**)
+  * 每个组件都是**`独立`**的 运行作用域  **`数据 逻辑没有任何关联`**
+  * 和实例相似之处:   data/methods/computed/watch  等一应俱全  
+* 注意 
+  * 不能和已有的标签名重名
+  * 命名规范 （单词全小写）
+    *  abc
+    * abc-b
+  * data是一个函数带有返回值的函数，并不在是一个对象
+  
+  ### 1.23.1 全局组件
+
+```JS
+      Vue.component("content-a", {
+        template: `<div>
+       				 {{count}}
+       			   </div>`,
+        data() {
+          return {
+            count: 1
+          };
+        }
+      });
 ```
 
