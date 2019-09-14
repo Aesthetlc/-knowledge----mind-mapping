@@ -1006,7 +1006,7 @@ goPage() {
   > 5. v-leave-active：定义离开过渡生效时的状态。
   > 6. v-leave-to: 2.1.8版及以上 定义离开过渡的结束状态。
 
-![1568471575044](C:\Users\56299\AppData\Roaming\Typora\typora-user-images\1568471575044.png)
+![](assets/1563292771195.png)
 
 ```js
 <transition name="slide">
