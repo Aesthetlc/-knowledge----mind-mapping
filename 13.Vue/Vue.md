@@ -621,7 +621,7 @@ console.dir(err)
     * abc-b
   * data是一个函数带有返回值的函数，并不在是一个对象
   
-  ### 1.23.1 全局组件
+###  1.23.1 全局组件
 
 ```JS
       Vue.component("content-a", {
@@ -636,3 +636,382 @@ console.dir(err)
       });
 ```
 
+  ### 1.23.2 局部组件
+
+```JS
+        new Vue({
+            el: "#app",
+            data: {},
+            methods: {},
+            components: {
+                "content-a": {
+                    template: `
+							<div>
+								{{count}}
+							</div>`,
+                    data() {
+                        return {
+                            count: 1
+                        };
+                    }
+                }
+            })
+```
+
+### 1.23.3 组件嵌套
+
+> - 我们可以在new Vue()实例中使用自定义组件,
+> - 可以在组件中注册组件
+> - **`在谁的组件对象中注册,就只能在谁的模板里使用该标签(局部)`**
+> - 也可以在注册自定义组件时,嵌套另一个自定义组件,也就是父子组件的关系
+> - 组件嵌套 =>  大组件 => 若干个小组件 =>  更多小组件  => 各司其职
+
+因为出现了父子组件的关系，那么必然会存在父子之间的通信：
+
+* 父组件 =>子组件   需要将数据传给子组件
+* 子组件 => 父组件  如果父组件需要 子组件也可以传数据给父组件
+* 兄弟组件1 =>兄弟组件2
+
+#### 1.23.3.1 父=>子传值(props)
+
+* props的作用：接收父组件传递的数据
+
+* props就是父组件给**`子组件标签`**上定义的**`属性`**
+
+  * props是组件的选项  定义接收属性
+  2. props的值可以是字符串数组 props:["list"]  
+  3. props数组里面的元素称之为prop(属性) 属性=?值
+  4. prop的值来源于外部的(组件的外部)
+  5. prop(我们这里是lists)是组件的属性->自定义标签的属性
+  6. prop的赋值位置(在使用组件时,通过标签属性去赋值)
+  7. prop的用法和data中的数据用法一样
+
+  ```js
+  //实例： 父=>子传值
+  <!-- 父子传值 -->
+      <div id="app">
+          <cityname :citylist="citylist"></cityname>
+      </div>
+      <script src="../vue.js"></script>
+      <script>
+          Vue.component('cityname', {
+              template: `
+                  <div>
+                      <ul>
+                          <li v-for="(item,index) in citylist" :key='index'>{{item}}</li>
+                      </ul>
+                  </div>
+              `,
+              props: ["citylist"],// props可以是数组  也可以是对象
+          })
+          var vm = new Vue({
+              el: '#app',
+              data: {
+                  citylist: ["哈尔滨", "齐齐哈尔", "松花江"]
+              },
+              methods: {}
+          });
+      </script>
+  ```
+
+#### 1.23.3.2 子=>父传值(自定义事件)
+
+* 通过在子组件中触发**`$emit`**事件,然后在当前组件实例中监视此事件
+
+* **`$emit是在当前组件实例抛出一个事件`**
+
+* **`监听谁的实例事件,就写在谁的标签上`**
+
+* `**$emit触发的事件,只能在当前实例监听,因为是在当前实例触发的**`
+
+* **抛出事件名必须为全小写**
+
+  ```js
+  <!-- 子=>父亲传值 -->
+      <div id="app">
+          <zizujian @datatofather="getFromContent"></zizujian>
+          我是来自于子元素---<span>{{ name }}</span>
+      </div>
+      <script src="../vue.js"></script>
+      <script>
+          var vm = new Vue({
+              el: '#app',
+              data: {
+                  name: '',
+              },
+              methods: {
+                  getFromContent(content) {
+                      this.name = content;
+                  }
+              },
+              //1.创建子组件
+              components: {
+                  "zizujian": {
+                      template: `
+                          <div>
+                              <span>我是局部(子)的信息，我将要将我自己传递到父亲那里</span>
+                              <p></p>
+                              <button @click="dataTrigger">点击</button>    
+                          </div>
+                      `,
+                      data() {
+                          return {
+                              content: "来了，子组件!",
+                          }
+                      },
+                      methods: {
+                          //dataTrigger点击按钮，进行数据传递触发
+                          dataTrigger() {
+                              //emit有若干个参数，第一个参数为自定义方法名，其余的参数均为要传递的数据
+                              this.$emit('datatofather', this.content)
+                          }
+                      }
+                  },
+              }
+          });
+      </script>
+  ```
+
+  
+
+##  1.24 SPA（single page application）单页面应用
+
+SPA与传统模式对比：
+
+* SPA
+  * 优点
+    * 速度快,**`切换模块不需要经过网络请求`**,**`用户体验好`**,因为前段操作几乎感受不到网络的延迟
+    * 完全**`组件化`**开发 ,由于**`只有一个页面`**,所以原来属于一个个页面的工作被归类为一个个**`组件`**.
+  * 缺点
+    * **`首屏加载慢`**->**`按需加载`** 不刷新页面只请求js模块
+    * **`不利于SEO`**->**`服务端渲染`**(node->自己写路由->express-art-template+res.render())
+* 传统模式
+  * 缺点
+    * 每个页面及其内容都需要从服务器**`一次次请求`**  如果网络差, 体验则会感觉很慢
+
+实现原理：
+
+* 可以通过页面地址的**`锚链接`**来实现
+* hash(锚链接)位于链接地址 **`#`**之后
+* hash值的改变**`不会触发`**页面刷新
+* hash值是url地址的一部分,会存储在页面地址上 我们**`可以获取`**到
+  * 通过===>`location.hash`来获取 
+* 可以通过**`事件监听`**hash值得改变
+* 拿到了**`hash值`**,就可以根据不同的hash值进行不同的**`模块切换`**
+
+## 1.25 路由
+
+```js
+//js实现前端路由
+<a href="#heb">哈尔滨</a>
+    <a href="#qqhe">齐齐哈尔</a>
+    <a href="#dq">大庆</a>
+    <a href="#sh">绥化</a>
+    <div></div>
+
+    <script>
+        var fun = function () {
+            url = location.hash.substr(1);
+            var div = document.getElementsByTagName("div");
+            switch (url) {
+                case "heb":
+                    div[0].innerText = "哈尔滨";
+                    break;
+                case "qqhe":
+                    div[0].innerText = "齐齐哈尔";
+                    break;
+                case "dq":
+                    div[0].innerText = "大庆";
+                    break;
+                case "sh":
+                    div[0].innerText = "绥化";
+                    break;
+                default:
+                    break;
+            }
+        }
+        window.onhashchange = fun;
+        fun();
+    </script>
+```
+
+### 1.25.1 vue-router初识
+
+* Vue-Router 是 [Vue.js](http://cn.vuejs.org/) 官方的**`路由管理器`**。它和 Vue.js 的核心深度集成，让构建单页面应用变得易如反掌 
+* 实现根据不同的**`请求地址`** 而**`显示不同的组件`**
+* 如果要使用 vue开发项目,**`前端路由`**功能**`必须使用`**vue-router来实现
+
+### 1.25.2 vue-router使用（7个步骤）
+
+* 引入vue-router.js
+* 设置导航`<router-link></router-link>`
+* 创建容器` <router-view></router-view>`
+* 实例化路由对象`var router = new VueRouter({ })`
+* 配置路由表 path/compoent
+* 挂在路由
+
+```js
+//实例
+<div id="app">
+        <router-link to="/bd">百度</router-link>
+        <router-link to="/xl">新浪</router-link>
+        <router-view></router-view>
+    </div>
+    <script src="../vue.js"></script>
+    <script src="../vue-router.js"></script>
+    <script>
+        var router = new VueRouter({
+            routes: [{
+                path: "/",
+                component: {
+                    template: `<div>无</div>`
+                }
+            }, {
+                path: "/bd",
+                component: {
+                    template: `<div>百度</div>`
+                }
+            }, {
+                path: "/xl",
+                component: {
+                    template: `<div>新浪</div>`
+                }
+            }]
+        });
+        var vm = new Vue({
+            el: '#app',
+            data: {},
+            methods: {},
+            router
+        });
+    </script>
+```
+
+### 1.25.3 动态路由
+
+如何理解动态路由
+
+* 点击**`列表页`** 跳转到**`详情页`**时,跳转的链接需要**`携带参数`**,会导致**`页面path`**不同
+* 当**`页面path不同`**却需要对应**`同一个组件`**时,需要用到**`动态路由`**这一概念
+
+动态路由实现代码：
+
+```JS
+//案例实现：
+<div id="app">
+        <router-link to="/company/百度">百度</router-link>
+        <router-link to="/company/新浪">新浪</router-link>
+        <router-link to="/company/腾讯">腾讯</router-link>
+        <router-link to="/company/饿了么">饿了么</router-link>
+        <router-view></router-view>
+    </div>
+    <script src="../vue.js"></script>
+    <script src="../vue-router.js"></script>
+    <script>
+        var router = new VueRouter({
+            routes: [{
+                path: '/company/:content',
+                component: {
+                    template: `<div>{{ $route.params.content }}--公司真的很棒<div>`
+                }
+            }, ]
+        })
+        var vm = new Vue({
+            el: '#app',
+            data: {},
+            methods: {},
+            router
+        });
+    </script>
+```
+
+###  1.25.4 vue-router-to属性赋值
+
+```JS
+ 	  <!-- 常规跳转 -->
+	  <router-link to="/sport">体育</router-link>
+      <!-- 变量 -->
+      <!-- <router-link :to="path">体育</router-link>
+      <!-- 根据对象name跳转 -->
+      <!-- <router-link :to="{name:'abcdefg'}">体育</router-link>
+      <!-- 根据对象path跳转 -->
+      <!-- <router-link :to="{path:'/sport'}">体育</router-link>
+      <!-- 带参数的跳转 -->
+      <router-link :to="{name:'abcdefg',params:{a:1}}">体育</router-link>
+```
+
+### 1.25.5 vue-router-重定向
+
+* 概述：想拦截谁就在谁的路由中写redirect
+
+```js
+//代码实现：
+{
+    path: '/heb',
+    redirect: '/bj',
+    component: {
+    	template: `
+              <div>哈尔滨</div>
+                  `,
+    }
+},
+//上述代码中，本意是需要跳转到/heb，但是因为有重定向固然跳转到了/bj中
+```
+
+### 1.25.5 vue-router-编程式导航
+
+* 路由对象的实例方法 有 push  replace, go()  
+* push 方法 相当于往历史记录里推了一条记录 如果点击返回 会回到上一次的地址  相当于 to属性
+* replace方法 相当于替换了当前的记录  历史记录并没有多 但是地址会变
+* go(数字) 代表希望是前进还是回退,当数字大于0 时 就是前进 n(数字)次,小于0时,就是后退n(数字)次
+
+`可以通过vue实例 获取当前的路由实例 $router `
+
+```JS
+//代码
+goPage() {
+   // 跳转到新闻页面
+   this.$router.push({
+     path: "/news"
+   });
+	等价于  to="{path:'/news'}"
+ }
+```
+
+### 1.25.6 vue-router-routerlink-tag-激活样式
+
+* 当前路由在导航中是拥有激活class样式的
+
+**`class名称是可以设置的`**
+
+```js
+<a href="#/news" class="router-link-exact-active router-link-active">新闻</a>
+```
+
+## 1.26 在 CSS 过渡和动画中自动应用 class
+
+* Vue中的动画 只能在组件的显示或者隐藏中操作 => v-if/v-show
+* transition标签是一个组件,Vue提供的 我们必须用它来包裹我们的组件 =>我们的组件必须有显示隐藏这个动作
+
+- 基本用法就是给我们需要动画的标签外面嵌套**`transition`**标签 ,并且设置name属性
+
+- Vue 提供了 `transition` 的封装组件，在下列元素更新,移除，新增 情形中，可以给任何元素和组件添加进入/离开过渡
+
+  > 6中class状态 
+  >
+  > 1. v-enter：定义进入过渡的开始状态。
+  > 2. v-enter-active：定义进入过渡生效时的状态。
+  > 3. v-enter-to: 2.1.8版及以上 定义进入过渡的结束状态。
+  > 4. v-leave: 定义离开过渡的开始状态。
+  > 5. v-leave-active：定义离开过渡生效时的状态。
+  > 6. v-leave-to: 2.1.8版及以上 定义离开过渡的结束状态。
+
+![1568471575044](C:\Users\56299\AppData\Roaming\Typora\typora-user-images\1568471575044.png)
+
+```js
+<transition name="slide">
+<div v-if="show" >动态显示内容</div>
+</transition>
+```
+
+**`注意`**   v要替换成transition组件的name属性值
