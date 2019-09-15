@@ -992,7 +992,7 @@ goPage() {
 
 ### 1.25.7 嵌套路由
 
-![](assets/1568549550447.png)
+![1568549550447](../../../../AppData/Roaming/Typora/typora-user-images/1568549550447.png)
 
 注意
 
@@ -1065,3 +1065,88 @@ path: "/music",
 ```
 
 **`注意`**   v要替换成transition组件的name属性值
+
+# 2. vue-cli
+
+## 2.1 vue-cli简介
+
+* vue-cli 是一个官方发布 vue.js 项目脚手架，使用 vue-cli 可以快速创建 vue 项目，GitHub地址是：https://github.com/vuejs/vue-cli
+
+## 2.2 vue-cli安装
+
+```bash
+npm i -g @vue/cli  // 全局安装脚手架  默认安装的最新版本 3.0+
+```
+
+如果你觉得下载太慢，您还可以使用如下方式：
+
+```bash
+# 注册淘宝镜像
+$ npm install -g cnpm --registry=https://registry.npm.taobao.org
+# 执行完毕之后 
+cnpm 完全可替代npm 
+```
+
+安装完毕之后你可以通过以下代码进行查看版本
+
+```bash
+vue -V  // 查看脚手架版本号
+or 
+vue --version // 和上面等价 
+```
+
+需要注意的事情，默认安装的是3.0+的版本，你也可以通过如下方式安装2.0+版本
+
+```bash
+npm install -g @vue/cli-init  // 安装桥接工具 将2.0的功能补齐到目前的脚手架上
+```
+
+## 2.3 vue-cli创建项目
+
+* 2.0 方式
+
+  ```bash
+  #  heroes 创建的项目名称
+  $ vue  init webpack-simple heroes //  webpack-simple 为模板名称 固定写法
+  # 切换到当前目录
+  $ cd  heroes 
+  # 在开发模式下 启动运行项目
+  $ npm run dev
+  
+  ```
+
+* 3.0 方式
+
+  ```BASH
+  # 3.0下创建项目
+  $ vue create heroes // create(创建) 为关键字
+  # 切换到当前目录
+  $ cd  heroes 
+  # 在开发模式下 启动运行项目
+  $ npm run serve
+  
+  //默认模式:一种标准的模板
+  //选择模式 可以根据自己的需求选择需要的工具和模式
+  ```
+
+  
+
+## 2.4 vue-cli创建项目目录说明
+
+* node_modules => 存放包依赖文件 (不能提交)
+* .bablelrc=>存放 babel编译的配置信息 => ES7/ES6 => ES5 => ES3
+* .editorconfig => 存放编辑器的配置信息
+* .gitignore => git忽略文件  => 忽略**`不需要提交`**的文件
+* index.html => 单页应用的html
+* package.json => 用于存放依赖信息 及 其他项目信息 => dependencies/devDependencies
+  * dependencies  运行时依赖  => 项目上线之后依然再用 => axios /vuejs
+  * devDependencies 开发时依赖  =>开发时 需要用的=> vue-cli =>  上线时不再需要 =>脚手架
+* README.md => 项目介绍信息 github上的页面信息
+* webpack.config.js => wepack工具的配置文件 => webpack是一个前端工程化的工具
+
+# 3.ES6补充说明
+
+> **ES6**提供**import**   别名   **from**  路径(包名)   语法 来引入 组件  
+>
+> **ES6**提供**export**  **default**  {     } 语法来导出组件  
+
