@@ -990,6 +990,54 @@ goPage() {
 <a href="#/news" class="router-link-exact-active router-link-active">新闻</a>
 ```
 
+### 1.25.7 嵌套路由
+
+![](assets/1568549550447.png)
+
+注意
+
+* 如果存在**`路由嵌套`**,就需要提供多个视图容器<router-view></router-view>
+* 同时,router-link和router-view 都可以添加类名、设定样式
+
+代码实现：
+
+```JS
+//一级路由
+<router-link to="/hot">热点</router-link>
+<router-link to="/education">教育</router-link>
+<router-link to="/music">音乐</router-link>
+<router-link to="/society">社会</router-link>
+<router-view class="first-view"></router-view>
+//path访问路径
+path: "/hot",
+path: "/education",
+path: "/music",
+path: "/society",
+```
+
+```JS
+//二级路由
+path: "/music",
+    component: {
+        template: `
+        <div>
+            <router-link to="/music/pop">流行的</router-link>
+            <router-link to="/music/excited">亢奋的</router-link>
+            <router-link to="/music/lyric">抒情的</router-link>
+            <router-view class="secondeRouter"></router-view>
+        </div>
+        `
+    },
+    children: [{},{},{}]
+//注意 
+//1. path: "", // 什么都不写 就认为是默认的二级路由
+//2. path: "/music/pop", // 全匹配 如果写斜杠 路径必须写全
+//3. path: "pop", // 如果不写斜杠 直接 当前子路由的地址即可
+//4. 这里的children应该与component同级，不存在包含的关系！
+```
+
+
+
 ## 1.26 在 CSS 过渡和动画中自动应用 class
 
 * Vue中的动画 只能在组件的显示或者隐藏中操作 => v-if/v-show
