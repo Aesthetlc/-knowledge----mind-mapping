@@ -1144,6 +1144,13 @@ npm install -g @vue/cli-init  // 安装桥接工具 将2.0的功能补齐到目�
 * README.md => 项目介绍信息 github上的页面信息
 * webpack.config.js => wepack工具的配置文件 => webpack是一个前端工程化的工具
 
+###  2.5 其他说明
+
+* --save  -S（装到dependencies） ==>运行时
+* --save--dev   -D(装到devDependencies)   ==>开发时
+* $route为当前router`跳转对象`里面可以获取name(路由名称)、path(当前路径)、query(查询参数)、params(当前参数)等
+* $router为`VueRouter实例`，想要导航到不同URL，则使用$router.push方法
+
 # 3.ES6补充说明
 
 > **ES6**提供**import**   别名   **from**  路径(包名)   语法 来引入 组件  
