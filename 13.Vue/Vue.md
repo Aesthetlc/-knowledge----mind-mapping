@@ -774,7 +774,10 @@ console.dir(err)
       </script>
   ```
 
-  
+### 1.23.4 组件分类
+
+  - 路由级别组件：挂在路由上的组件
+  - 普通组件: 在路由级中使用的组件叫做普通组件
 
 ##  1.24 SPA（single page application）单页面应用
 
@@ -960,7 +963,7 @@ SPA与传统模式对比：
 //上述代码中，本意是需要跳转到/heb，但是因为有重定向固然跳转到了/bj中
 ```
 
-### 1.25.5 vue-router-编程式导航
+### 1.25.6 vue-router-编程式导航
 
 * 路由对象的实例方法 有 push  replace, go()  
 * push 方法 相当于往历史记录里推了一条记录 如果点击返回 会回到上一次的地址  相当于 to属性
@@ -978,16 +981,6 @@ goPage() {
    });
 	等价于  to="{path:'/news'}"
  }
-```
-
-### 1.25.6 vue-router-routerlink-tag-激活样式
-
-* 当前路由在导航中是拥有激活class样式的
-
-**`class名称是可以设置的`**
-
-```js
-<a href="#/news" class="router-link-exact-active router-link-active">新闻</a>
 ```
 
 ### 1.25.7 嵌套路由
@@ -1036,8 +1029,6 @@ path: "/music",
 //4. 这里的children应该与component同级，不存在包含的关系！
 ```
 
-
-
 ## 1.26 在 CSS 过渡和动画中自动应用 class
 
 * Vue中的动画 只能在组件的显示或者隐藏中操作 => v-if/v-show
@@ -1065,6 +1056,76 @@ path: "/music",
 ```
 
 **`注意`**   v要替换成transition组件的name属性值
+
+
+
+##  1.27 插槽
+
+* 匿名插槽
+  
+  * ```js
+    <span>我来到</span><slot></slot><span>学习前端技术</span>
+    ```
+  
+  * ```js
+    <child-a>
+    	<span style="color:red">黑马</span>
+    </child-a>
+    ```
+  
+  ![1568728215557](assets/1568728215557.png)
+  
+* 后备插槽
+
+  * ```JS
+    用户名：<input type="text">
+    密码：<input type="password">
+    <button><slot>登录</slot></button>
+    ```
+
+  * ```JS
+    <child-a></child-a>
+    <child-a>注册</child-a>
+    <child-a>注册1</child-a>
+    <child-a>注册2</child-a>
+    <child-a>注册3</child-a>
+    ```
+
+    ![1568728234101](assets/1568728234101.png)
+
+* 具名插槽
+
+  * ```JS
+    <div slot="header" style="height:20px;background-color:blue"></div>
+    <div slot="body" style="color:white">我是body</div>
+    <div slot="footer" style="color:green">我是footer</div>
+    ```
+
+  * ```JS
+    <child-a>
+        <slot class="first-slot" name="header"></slot>
+    	<slot class="second-slot" name="body"></slot>
+    	<slot name="footer"></slot>
+    </child-a>
+    ```
+
+  ![1568728249019](assets/1568728249019.png)
+
+* 作用域插槽
+
+  * ```JS
+     <slot name="header" :title="name"></slot>
+     <slot :list="list"></slot>
+    ```
+
+  * ```JS
+     <child-a>
+         <div slot="header" style="color:red;font-size:48px" slot-scope="obj">{{ obj.title }}</div>
+      	 <div slot-scope="obj">{{ obj.list }}</div>
+    </child-a>
+    ```
+
+  ![1568728260662](assets/1568728260662.png)
 
 # 2. vue-cli
 
@@ -1151,7 +1212,75 @@ npm install -g @vue/cli-init  // 安装桥接工具 将2.0的功能补齐到目�
 * $route为当前router`跳转对象`里面可以获取name(路由名称)、path(当前路径)、query(查询参数)、params(当前参数)等
 * $router为`VueRouter实例`，想要导航到不同URL，则使用$router.push方法
 
-# 3.ES6补充说明
+# 3. vue项目优化
+
+## 3.1 axios的统一导入和使用
+
+* 导入
+  * 在入口main.js文件中引入axios
+  * 并给全局`Vue对象`的`原型链`赋值
+
+* 使用
+
+  * ```bash
+    Vue.prototype.$http = Axios; //所有的实例都直接共享拥有了 这个方法
+    ```
+
+##  3.2 URL的统一使用
+
+* axios中配置统一的**`请求路径头`**（给axios中的baseUrl设置常态值）
+
+  * ```bash
+    Axios.defaults.baseURL = "http://localhost:3000"; // 设置共享的方法
+    ```
+
+## 3.3 vue-router-routerlink-tag-激活样式
+
+- 当前路由在导航中是拥有激活class样式的
+
+**`class名称是可以设置的`**
+
+```js
+<a href="#/news" class="router-link-exact-active router-link-active">新闻</a>
+```
+
+## 3.4 给路由增加过渡效果
+
+![](assets/1563292771195.png)
+
+```JS
+.slide-enter {
+  opacity: 0;
+}
+.slide-enter-active {
+  transition: all 2s;
+}
+```
+
+
+
+#  4.vue中的钩子函数
+
+## 4.1 四个阶段
+
+* 实例创建前后
+  * beforeCreate => 实例创建前（很少用）	`(鸡肋函数)`
+  * created => 实例创建后 => 加载数据(拥有了该拥有的相关东西)
+* 页面渲染前后
+  * beforeMount => 页面渲染前
+  * mounted => 页面渲染后 => 可以获取dom对象 => `this.$refs`可以获取到
+* 数据更新前后
+  * beforeUpdate => 数据更新前触发 => 任何数据都会触发 `(鸡肋函数)`
+  * update => 数据更新后触发 `(鸡肋函数)`
+* 组件销毁前后
+  * beforeDestroy => 组件销毁前 （销毁之前定义的定时器）
+  * destory => 组件销毁后`（鸡肋函数）`
+
+
+
+![](assets/lifecycle.png)
+
+# 5.ES6补充说明
 
 > **ES6**提供**import**   别名   **from**  路径(包名)   语法 来引入 组件  
 >
